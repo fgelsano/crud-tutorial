@@ -8,14 +8,18 @@
     $sql = "SELECT * from users";
     $result = $conn->query($sql);
 
-    $error = false;
-
     if(isset($_GET['error'])){
-        $error = true;
+        $error = $_GET['error'];
+        if($error == "too-large"){
+            $errorMsg = "Sorry, your image file is too large. Accepted file size is 5mb.";
+        } else if($error == "invalid-file"){
+            $errorMsg = "Sorry, your image file is invalid. Accepted files are: png, jpg, jpeg, gif.";
+        } else if($error == "not-img"){
+            $errorMsg = "Sorry, your file is not an image.";
+        } else {
+            $errorMsg = "Sorry, something went wrong. Please try again.";
+        }
     }
-
-    $blogs = "SELECT * from blogs";
-    $blogsResult = $conn->query($blogs);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,7 +28,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>Users</title>
+        <title>New Blog</title>
         <!-- Favicon-->
         <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
         <!-- Core theme CSS (includes Bootstrap)-->
@@ -38,7 +42,7 @@
                 <div class="list-group list-group-flush">
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="dashboard.php">Dashboard</a>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3 active" href="#!">Blogs</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="users.php">Users</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3">Users</a>
                 </div>
             </div>
             <!-- Page content wrapper-->
@@ -61,50 +65,32 @@
                     </div>
                 </nav>
                 <!-- Page content-->
-                <div class="container-fluid mx-3">
-                    <div class="container mt-3">
-                        <div class="alert alert-danger <?php echo($error ? "d-block" : "d-none") ?>">
-                            <strong>Error:</strong>
-                            Something is wrong with your entry causing the action to fail. Please try again.
+                <div class="container-fluid mt-5 mx-3">
+                    <div class="container">
+                        <div class="alert alert-danger mx-3 mb-3 <?php echo(isset($_GET['error']) ? "d-block" : "d-none" ) ?>">
+                                <strong>Error: </strong><?php echo isset($errorMsg) ? $errorMsg : ''  ?>
                         </div>
-                        <div class="row">
-                            <div class="offset-md-10 md-2 col-12">
-                                <a href="new-blog-form.php" class="btn btn-primary block">New Blog</a>
+                    
+                        <div class="card mx-3">
+                            <div class="card-header">
+                                New Blog
                             </div>
+                            <form action="save-blog.php" method="post" enctype="multipart/form-data">
+                                <div class="card-body">
+                                        <input class="form-control" name="blog-title" type="text" placeholder="Blog Title" aria-label="default input example">                                    
+                                        <div class="form-floating mt-3">
+                                            <textarea class="form-control" name="blog-body" placeholder="Type your blog contents here..." id="floatingTextarea" style="height: 100px"></textarea>
+                                            <label for="floatingTextarea">Type your blog contents here...</label>
+                                        </div>
+                                        <div class="my-3">
+                                            <input class="form-control" name="blog-img" type="file" id="formFile">
+                                        </div>
+                                </div>
+                                <div class="card-footer">
+                                    <input type="submit" class="btn btn-primary" value="Save" name="submit">
+                                </div>
+                            </form>
                         </div>
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Action</th>
-                                    <th scope="col">Image</th>
-                                    <th scope="col">Title</th>
-                                    <th scope="col">Author</th>
-                                    <th scope="col">Date Posted</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            <?php
-                                if($blogsResult->num_rows > 0){
-                                    while($blog = $blogsResult->fetch_assoc()){
-                                    $authorId = $blog['author'];
-                                    $authorSql = "SELECT first_name, last_name from users where id='$authorId'";
-                                    $searchAuthor = $conn->query($authorSql);
-                                    $authorName = $searchAuthor->fetch_assoc();
-                            ?> 
-                                <tr>
-                                    <td><a href="">Edit</a> | <a href="">Delete</a></td>
-                                    <td width="10%"><img src="<?php echo $blog['img'] ?>" alt="" width="100%"></td>
-                                    <td><?php echo $blog['title'] ?></td>
-                                    <td><?php echo ($authorName['first_name'] . " " . $authorName['last_name']) ?></td>
-                                    <td><?php echo $blog['created_at'] ?></td>
-                                </tr>
-                            <?php
-                                    }
-                                }
-                            ?>
-                                
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>
